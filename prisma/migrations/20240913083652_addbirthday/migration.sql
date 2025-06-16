@@ -1,21 +1,14 @@
-/*
-  Warnings:
-
-  - Added the required column `birthday` to the `Student` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `birthday` to the `Teacher` table without a default value. This is not possible if the table is not empty.
-
-*/
--- DropForeignKey
-ALTER TABLE "Class" DROP CONSTRAINT "Class_supervisorId_fkey";
-
 -- AlterTable
-ALTER TABLE "Class" ALTER COLUMN "supervisorId" DROP NOT NULL;
+ALTER TABLE `Class` 
+  DROP FOREIGN KEY `Class_supervisorId_fkey`,
+  MODIFY COLUMN `supervisorId` VARCHAR(255) NULL;
 
--- AlterTable
-ALTER TABLE "Student" ADD COLUMN     "birthday" TIMESTAMP(3) NOT NULL;
+-- If the Student table is not empty, this will fail unless birthday is nullable or has a default
+-- Recommended solution: make it nullable or use a default for now
+ALTER TABLE `Student` ADD COLUMN `birthday` DATETIME(3) NULL;
+ALTER TABLE `Teacher` ADD COLUMN `birthday` DATETIME(3) NULL;
 
--- AlterTable
-ALTER TABLE "Teacher" ADD COLUMN     "birthday" TIMESTAMP(3) NOT NULL;
-
--- AddForeignKey
-ALTER TABLE "Class" ADD CONSTRAINT "Class_supervisorId_fkey" FOREIGN KEY ("supervisorId") REFERENCES "Teacher"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+-- AddForeignKey (re-added with SET NULL on DELETE)
+ALTER TABLE `Class` 
+  ADD CONSTRAINT `Class_supervisorId_fkey` 
+  FOREIGN KEY (`supervisorId`) REFERENCES `Teacher`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

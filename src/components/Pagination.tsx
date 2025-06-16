@@ -12,7 +12,7 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
   const changePage = (newPage: number) => {
     const params = new URLSearchParams(window.location.search);
     params.set("page", newPage.toString());
-    router.push(`${window.location.pathname}?${params}`);
+    // router.push(`${window.location.pathname}?${params}`);
   };
   return (
     <div className="p-4 flex items-center justify-between text-gray-500">

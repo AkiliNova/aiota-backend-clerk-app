@@ -1,8 +1,10 @@
 import Announcements from "@/components/Announcements";
-import AttendanceChartContainer from "@/components/AttendanceChartContainer";
-import CountChartContainer from "@/components/CountChartContainer";
+import SurveillanceFeedSummary from "@/components/SurveillanceFeedSummary";
+import DetectionStatsChart from "@/components/DetectionStatsChart";
+import BehaviorAlertChart from "@/components/BehaviorAlertChart";
+import AccessLogChart from "@/components/AccessLogChart";
+import TruancyReportChart from "@/components/TruancyReportChart";
 import EventCalendarContainer from "@/components/EventCalendarContainer";
-import FinanceChart from "@/components/FinanceChart";
 import UserCard from "@/components/UserCard";
 
 const AdminPage = ({
@@ -19,27 +21,36 @@ const AdminPage = ({
           <UserCard type="admin" />
           <UserCard type="teacher" />
           <UserCard type="student" />
-          <UserCard type="parent" />
+          <UserCard type="security" />
         </div>
+
         {/* MIDDLE CHARTS */}
         <div className="flex gap-4 flex-col lg:flex-row">
-          {/* COUNT CHART */}
-          <div className="w-full lg:w-1/3 h-[450px]">
-            <CountChartContainer />
+          {/* OBJECT & HUMAN DETECTION */}
+          <div className="w-full lg:w-1/2 h-[450px]">
+            <DetectionStatsChart />
           </div>
-          {/* ATTENDANCE CHART */}
-          <div className="w-full lg:w-2/3 h-[450px]">
-            <AttendanceChartContainer />
+          {/* BEHAVIOR ALERTS */}
+          <div className="w-full lg:w-1/2 h-[450px]">
+            <BehaviorAlertChart />
           </div>
         </div>
-        {/* BOTTOM CHART */}
-        <div className="w-full h-[500px]">
-          <FinanceChart />
+
+        {/* ACCESS + TRUANCY REPORTS */}
+        <div className="flex gap-4 flex-col lg:flex-row">
+          <div className="w-full lg:w-1/2 h-[450px]">
+            <AccessLogChart />
+          </div>
+          <div className="w-full lg:w-1/2 h-[450px]">
+            <TruancyReportChart />
+          </div>
         </div>
       </div>
+
       {/* RIGHT */}
       <div className="w-full lg:w-1/3 flex flex-col gap-8">
-        <EventCalendarContainer searchParams={searchParams}/>
+        <SurveillanceFeedSummary />
+        <EventCalendarContainer searchParams={searchParams} />
         <Announcements />
       </div>
     </div>

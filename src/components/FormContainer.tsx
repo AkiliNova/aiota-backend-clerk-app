@@ -11,6 +11,7 @@ export type FormContainerProps = {
     | "class"
     | "lesson"
     | "exam"
+    |  "user"
     | "assignment"
     | "result"
     | "attendance"
@@ -19,6 +20,7 @@ export type FormContainerProps = {
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | string;
+  onCreate?: () => void;
 };
 
 const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
@@ -60,6 +62,12 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         });
         relatedData = { classes: studentClasses, grades: studentGrades };
         break;
+        case "user":
+          const users = await prisma.user.findMany({
+            select: { id: true, email: true, name: true, role: true },
+          });
+          relatedData = { users };
+        break;
       case "exam":
         const examLessons = await prisma.lesson.findMany({
           where: {
@@ -74,6 +82,7 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
         break;
     }
   }
+  
 
   return (
     <div className="">

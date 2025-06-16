@@ -3,17 +3,17 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
 model Admin {
-  id       String @id
+  id       String @id @default(uuid())
   username String @unique
 }
 
 model Student {
-  id          String       @id
+  id          String       @id @default(uuid())
   username    String       @unique
   name        String
   surname     String
@@ -23,20 +23,24 @@ model Student {
   img         String?
   bloodType   String
   sex         UserSex
+  birthday    DateTime
   createdAt   DateTime     @default(now())
+
   parentId    String
   parent      Parent       @relation(fields: [parentId], references: [id])
+
   classId     Int
   class       Class        @relation(fields: [classId], references: [id])
+
   gradeId     Int
   grade       Grade        @relation(fields: [gradeId], references: [id])
+
   attendances Attendance[]
   results     Result[]
-  birthday    DateTime
 }
 
 model Teacher {
-  id        String    @id
+  id        String    @id @default(uuid())
   username  String    @unique
   name      String
   surname   String
@@ -46,15 +50,16 @@ model Teacher {
   img       String?
   bloodType String
   sex       UserSex
+  birthday  DateTime
   createdAt DateTime  @default(now())
+
   subjects  Subject[]
   lessons   Lesson[]
-  classes   Class[]
-  birthday  DateTime
+  classes   Class[] @relation("ClassSupervisor")
 }
 
 model Parent {
-  id        String    @id
+  id        String    @id @default(uuid())
   username  String    @unique
   name      String
   surname   String
@@ -62,29 +67,32 @@ model Parent {
   phone     String    @unique
   address   String
   createdAt DateTime  @default(now())
+
   students  Student[]
 }
 
 model Grade {
-  id    Int @id @default(autoincrement())
-  level Int @unique
+  id       Int       @id @default(autoincrement())
+  level    Int       @unique
 
   students Student[]
   classess Class[]
 }
 
 model Class {
-  id       Int    @id @default(autoincrement())
-  name     String @unique
-  capacity Int
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  capacity    Int
 
   supervisorId  String?
-  supervisor    Teacher?       @relation(fields: [supervisorId], references: [id])
-  lessons       Lesson[]
-  students      Student[]
-  gradeId       Int
-  grade         Grade          @relation(fields: [gradeId], references: [id])
-  events        Event[]
+  supervisor    Teacher? @relation("ClassSupervisor", fields: [supervisorId], references: [id])
+
+  gradeId     Int
+  grade       Grade     @relation(fields: [gradeId], references: [id])
+
+  lessons     Lesson[]
+  students    Student[]
+  events      Event[]
   announcements Announcement[]
 }
 
@@ -96,18 +104,21 @@ model Subject {
 }
 
 model Lesson {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
   day       Day
   startTime DateTime
   endTime   DateTime
 
-  subjectId   Int
-  subject     Subject      @relation(fields: [subjectId], references: [id])
-  classId     Int
-  class       Class        @relation(fields: [classId], references: [id])
-  teacherId   String
-  teacher     Teacher      @relation(fields: [teacherId], references: [id])
+  subjectId Int
+  subject   Subject    @relation(fields: [subjectId], references: [id])
+
+  classId   Int
+  class     Class      @relation(fields: [classId], references: [id])
+
+  teacherId String
+  teacher   Teacher    @relation(fields: [teacherId], references: [id])
+
   exams       Exam[]
   assignments Assignment[]
   attendances Attendance[]
@@ -136,24 +147,27 @@ model Assignment {
 }
 
 model Result {
-  id    Int @id @default(autoincrement())
-  score Int
+  id          Int       @id @default(autoincrement())
+  score       Int
 
   examId       Int?
   exam         Exam?       @relation(fields: [examId], references: [id])
+
   assignmentId Int?
   assignment   Assignment? @relation(fields: [assignmentId], references: [id])
+
   studentId    String
   student      Student     @relation(fields: [studentId], references: [id])
 }
 
 model Attendance {
-  id      Int      @id @default(autoincrement())
-  date    DateTime
-  present Boolean
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  present   Boolean
 
   studentId String
   student   Student @relation(fields: [studentId], references: [id])
+
   lessonId  Int
   lesson    Lesson  @relation(fields: [lessonId], references: [id])
 }
@@ -178,6 +192,103 @@ model Announcement {
   classId Int?
   class   Class? @relation(fields: [classId], references: [id])
 }
+enum EventType {
+  face_detected
+  unauthorized_access
+  bullying
+  fighting
+  sneaking
+  cheating
+  weapon_detected
+  phone_detected
+  fire_detected
+}
+
+model CameraZone {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  location    String?
+  cameras     Camera[]
+}
+
+model Camera {
+  id         Int          @id @default(autoincrement())
+  zoneId     Int
+  ipAddress  String
+  isActive   Boolean       @default(true)
+
+  zone       CameraZone    @relation(fields: [zoneId], references: [id])
+  events     SurveillanceEvent[]
+}
+
+model SurveillanceEvent {
+  id          Int             @id @default(autoincrement())
+  cameraId    Int
+  eventType   EventType
+  timestamp   DateTime        @default(now())
+  description String?
+  severity    Int             @default(1) // 1–5 severity scale
+  camera      Camera          @relation(fields: [cameraId], references: [id])
+  flagged     FlaggedEvent?
+}
+
+model FlaggedEvent {
+  id              Int                @id @default(autoincrement())
+  eventId         Int                @unique
+  flaggedById     String             // Clerk user ID
+  reason          String
+  reviewed        Boolean            @default(false)
+  reviewedAt      DateTime?
+  additionalNotes String?
+
+  event           SurveillanceEvent  @relation(fields: [eventId], references: [id])
+}
+model Security {
+  id          String   @id @default(uuid())
+  name        String
+  phone       String   @unique
+  email       String?  @unique
+  station     String   // e.g. "Main Gate", "Dorm A"
+  shift       String   // e.g. "Night", "Day"
+  image       String?  // optional profile image
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  password       String?  // null if you delegate auth to Clerk later
+  name           String?
+  username       String?  @unique
+  phone          String?  @unique
+  profileImage   String?  // Clerk stores image
+  clerkUserId    String?  @unique // maps to Clerk's `user.id`
+
+  // Clerk metadata
+  clerkCreatedAt DateTime? 
+  clerkUpdatedAt DateTime?
+  lastSignInAt   DateTime?
+  isEmailVerified Boolean? @default(false)
+  emailVerificationToken String? // if you do your own flow
+  phoneVerified   Boolean? @default(false)
+
+  // Roles & permissions (optional)
+  role            UserRole  @default(USER)
+
+  // Timestamps
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// Optional enum for roles
+enum UserRole {
+  ADMIN
+  STAFF
+  USER
+}
+
 
 enum UserSex {
   MALE
