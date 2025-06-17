@@ -83,13 +83,13 @@ const SurveillanceEventsPage = async ({
         query.cameraId = value;
         break;
       case "eventType":
-        query.eventType = { contains: value, mode: "insensitive" };
+        query.eventType = { contains: value };
         break;
       case "location":
-        query.camera.location = { contains: value, mode: "insensitive" };
+        query.camera.location = { contains: value };
         break;
       case "search":
-        query.eventType = { contains: value, mode: "insensitive" };
+        query.eventType = { contains: value };
         break;
     }
   }

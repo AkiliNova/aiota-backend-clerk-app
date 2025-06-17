@@ -122,10 +122,11 @@ const FormModal = ({
   const [open, setOpen] = useState(false);
 
   const Form = () => {
-    const [state, formAction] = useFormState(deleteActionMap[table], {
-      success: false,
-      error: false,
-    });
+    const [state, formAction] = useFormState(
+  deleteActionMap[table as keyof typeof deleteActionMap],
+  { success: false, error: false }
+);
+
 
     const router = useRouter();
 
