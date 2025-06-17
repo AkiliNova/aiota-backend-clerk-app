@@ -56,8 +56,9 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error('Error saving alert:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { success: false, message: 'Invalid request', error },
+      { success: false, message: 'Invalid request', errorMessage },
       { status: 400 }
     );
   }
