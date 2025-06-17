@@ -7,12 +7,12 @@ const menuItems = [
     title: "SURVEILLANCE",
     items: [
       { icon: "/home.png", label: "Dashboard", href: "/dashboard", visible: ["admin", "security", "teacher"] },
-      { icon: "/camera.png", label: "Live Feeds", href: "/feeds/live", visible: ["admin", "security"] },
+      { icon: "/alert.png", label: "Live Feeds", href: "/feeds/live", visible: ["admin", "security"] },
       { icon: "/alert.png", label: "Video Alerts", href: "/list/alerts", visible: ["admin", "teacher", "security"] },
-      { icon: "/object-detect.png", label: "Object Detections", href: "/list/objects", visible: ["admin", "security"] },
-      { icon: "/human-action.png", label: "Behavior Alerts", href: "/list/actions", visible: ["admin", "teacher", "security"] },
-      { icon: "/gate.png", label: "Gate Access Logs", href: "/list/access-logs", visible: ["admin", "security"] },
-      { icon: "/truancy.png", label: "Truancy Reports", href: "/list/truancy", visible: ["admin", "teacher"] },
+      { icon: "/alert.png", label: "Object Detections", href: "/list/objects", visible: ["admin", "security"] },
+      { icon: "/alert.png", label: "Behavior Alerts", href: "/list/actions", visible: ["admin", "teacher", "security"] },
+      { icon: "/alert.png", label: "Gate Access Logs", href: "/list/access-logs", visible: ["admin", "security"] },
+      { icon: "/alert.png", label: "Truancy Reports", href: "/list/truancy", visible: ["admin", "teacher"] },
     ],
   },
   {
