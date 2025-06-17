@@ -13,6 +13,8 @@ const isPublicRoute = createRouteMatcher([
   "/api/admin/users/create-user", // Optional: allow user creation
   "/api/admin/users",           // Optional: allow user listing
   "/api/admin(.*)",  // Optional: allow all mobile API routes
+  "/api/alerts/client", // Optional: allow client alerts
+  "/api/alerts/client/(.*)", // Optional: allow client alerts with params
 ]);
 
 export default clerkMiddleware((auth, req) => {

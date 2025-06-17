@@ -34,5 +34,6 @@ jobs:
             cd ~/aiota/aiota-backend-clerk-app
             git pull origin main
             npm install
+            npx prisma db push 
             npm run build
             pm2 restart nextjs-app

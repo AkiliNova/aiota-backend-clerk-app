@@ -106,3 +106,41 @@
   color: gray !important;
   margin-bottom: 5px;
 }
+/* src/app/globals.css */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* custom animation for surveillance scrolling alerts */
+
+
+.animate-scroll {
+  animation: scroll 8s linear infinite; /* faster (was 20s) */
+}.scroll-container {
+  overflow: hidden;
+  height: 300px; /* you can adjust height */
+  position: relative;
+}
+
+.scroll-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: scroll 8s linear infinite;
+}
+
+
+@keyframes vertical-scroll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-80%);
+  }
+}
+
+.animate-vertical-scroll {
+  animation: vertical-scroll 20s linear infinite;
+}
+
