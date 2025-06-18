@@ -20,9 +20,15 @@ const config: Config = {
         lamaPurpleLight: "#F1F0FF",
         lamaYellow: "#FAE27C",
         lamaYellowLight: "#FEFCE8",
+
+        // Add AkiliNova brand colors here
+        akiliRed: "#E30613",
+        deepBlack: "#000000",
+        pureWhite: "#FFFFFF",
       },
     },
   },
   plugins: [],
 };
+
 export default config;

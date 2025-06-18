@@ -21,8 +21,8 @@ const menuItems = [
       { icon: "/teacher.png", label: "Teachers", href: "/list/teachers", visible: ["admin"] },
       { icon: "/student.png", label: "Students", href: "/list/students", visible: ["admin", "teacher"] },
       { icon: "/parent.png", label: "Parents", href: "/list/parents", visible: ["admin"] },
-      { icon: "/staff.png", label: "Security Staff", href: "/list/security", visible: ["admin"] },
-      { icon: "/staff.png", label: "Users Management", href: "/list/users", visible: ["admin"] },
+      { icon: "/parent.png", label: "Security Staff", href: "/list/security", visible: ["admin"] },
+      { icon: "/parent.png", label: "Users Management", href: "/list/users", visible: ["admin"] },
     ],
   },
   {
@@ -32,6 +32,7 @@ const menuItems = [
       { icon: "/announcement.png", label: "Announcements", href: "/list/announcements", visible: ["admin", "teacher", "student"] },
       { icon: "/profile.png", label: "Profile", href: "/profile", visible: ["admin", "teacher", "student", "security"] },
       { icon: "/setting.png", label: "Settings", href: "/settings", visible: ["admin"] },
+      { icon: "/setting.png", label: "Revenue", href: "/list/clients-revenue", visible: ["admin"] },
       { icon: "/logout.png", label: "Logout", href: "/logout", visible: ["admin", "teacher", "student", "security"] },
     ],
   },

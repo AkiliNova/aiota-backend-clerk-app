@@ -11,157 +11,122 @@ type User = {
   createdAt: string;
 };
 
-function CreateUserForm({ onSuccess }: { onSuccess: () => void }) {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("teacher");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [password, setPassword] = useState("");
-
-  const splitFullName = (fullName: string) => {
-    const parts = fullName.trim().split(" ");
-    return {
-      firstName: parts[0],
-      lastName: parts.slice(1).join(" ") || "",
-    };
-  };
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    const { firstName, lastName } = splitFullName(name);
-
-    try {
-      await axios.post("/api/admin/users", {
-        email,
-        password,
-        role,
-        firstName,
-        lastName,
-      });
-
-      setEmail("");
-      setName("");
-      setPassword("");
-      setRole("teacher");
-
-      onSuccess();
-    } catch (err: any) {
-      setError(err?.response?.data?.error || "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-4 border rounded shadow-sm max-w-md w-full"
-    >
-      <h2 className="text-lg font-semibold mb-3">Create New User</h2>
-      {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-
-      <div className="space-y-3">
-        <input
-          type="text"
-          placeholder="Full Name"
-          className="input input-bordered w-full"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          className="input input-bordered w-full"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          className="input input-bordered w-full"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <select
-          className="input input-bordered w-full"
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-        >
-          <option value="admin">Admin</option>
-          <option value="teacher">Teacher</option>
-          <option value="student">Student</option>
-          <option value="security">Security</option>
-        </select>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="btn btn-primary w-full"
-        >
-          {loading ? "Creating..." : "Create User"}
-        </button>
-      </div>
-    </form>
-  );
-}
-
 export default function UserPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
-  const fetchUsers = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "teacher",
+  });
+
+  const fetchUsers = async () => {
     setLoading(true);
-    axios
-      .get<User[]>("/api/admin/users")
-      .then((res) => setUsers(res.data))
-      .then(() => setLoading(false));
+    try {
+      const res = await axios.get<User[]>("/api/admin/users");
+      setUsers(res.data);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    }
+    setLoading(false);
   };
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const nameParts = formData.name.trim().split(" ");
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    await axios.post("/api/admin/users", {
+      email: formData.email,
+      password: formData.password,
+      role: formData.role,
+      firstName,
+      lastName,
+    });
+
+    setFormData({ name: "", email: "", password: "", role: "teacher" });
+    setShowModal(false);
+    fetchUsers();
+  };
+
   return (
-    <div className="p-4">
-      <div className="mb-6 flex flex-col lg:flex-row justify-between gap-4">
-        <h1 className="text-xl font-bold">User Management</h1>
-        <CreateUserForm onSuccess={fetchUsers} />
+    <div className="p-6">
+      {/* Top Bar */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-deepBlack">User Management</h1>
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-akiliRed text-white px-5 py-2 rounded shadow hover:opacity-90 transition"
+        >
+          Add User
+        </button>
       </div>
 
+      {/* Top Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded shadow p-4">
+          <p className="text-sm text-gray-500 mb-1">Total Users</p>
+          <p className="text-xl font-bold">{users.length}</p>
+        </div>
+        <div className="bg-white rounded shadow p-4">
+          <p className="text-sm text-gray-500 mb-1">Active Users</p>
+          <p className="text-xl font-bold">{users.length}</p>
+        </div>
+        <div className="bg-white rounded shadow p-4">
+          <p className="text-sm text-gray-500 mb-1">New This Month</p>
+          <p className="text-xl font-bold">5</p>
+        </div>
+        <div className="bg-white rounded shadow p-4">
+          <p className="text-sm text-gray-500 mb-1">Admins</p>
+          <p className="text-xl font-bold">
+            {users.filter((u) => u.role === "admin").length}
+          </p>
+        </div>
+      </div>
+
+      {/* User Table */}
       <div className="bg-white rounded shadow overflow-x-auto">
         {loading ? (
           <p className="p-4">Loading users...</p>
         ) : (
-          <table className="table w-full text-sm">
+          <table className="table-auto w-full text-sm">
             <thead className="bg-gray-100 text-left">
               <tr>
-                <th className="p-2">Name</th>
-                <th className="p-2">Email</th>
-                <th className="p-2">Role</th>
-                <th className="p-2">Created</th>
+                <th className="p-3">Name</th>
+                <th className="p-3">Email</th>
+                <th className="p-3">Role</th>
+                <th className="p-3">Created</th>
+                <th className="p-3">Status</th>
               </tr>
             </thead>
             <tbody>
               {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="p-2">{user.name}</td>
-                  <td className="p-2">{user.email}</td>
-                  <td className="p-2 capitalize">{user.role}</td>
-                  <td className="p-2">
+                <tr key={user.id} className="hover:bg-gray-50 border-b">
+                  <td className="p-3">{user.name}</td>
+                  <td className="p-3">{user.email}</td>
+                  <td className="p-3 capitalize">{user.role}</td>
+                  <td className="p-3">
                     {new Date(user.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="p-3">
+                    <span className="inline-block px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                      Active
+                    </span>
                   </td>
                 </tr>
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-4 text-center text-gray-500">
+                  <td colSpan={5} className="p-4 text-center text-gray-500">
                     No users found.
                   </td>
                 </tr>
@@ -170,6 +135,98 @@ export default function UserPage() {
           </table>
         )}
       </div>
+
+     {/* Modal */}
+{showModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
+      {/* Close button */}
+      <button
+        onClick={() => setShowModal(false)}
+        className="absolute top-4 right-4 text-gray-400 hover:text-deepBlack text-2xl"
+      >
+        &times;
+      </button>
+
+      <h2 className="text-2xl font-bold text-deepBlack mb-6">Add New User</h2>
+
+      <form onSubmit={handleCreateUser} className="space-y-4">
+        <input
+          type="text"
+          placeholder="Full Name"
+          value={formData.name}
+          onChange={(e) =>
+            setFormData({ ...formData, name: e.target.value })
+          }
+          required
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-akiliRed"
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={(e) =>
+            setFormData({ ...formData, email: e.target.value })
+          }
+          required
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-akiliRed"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={(e) =>
+            setFormData({ ...formData, password: e.target.value })
+          }
+          required
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-akiliRed"
+        />
+
+        <select
+          value={formData.role}
+          onChange={(e) =>
+            setFormData({ ...formData, role: e.target.value })
+          }
+          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-akiliRed
+            text-deepBlack"
+        >
+          <option
+            value="admin"
+            className="hover:bg-deepBlack hover:text-white"
+          >
+            Admin
+          </option>
+          <option
+            value="teacher"
+            className="hover:bg-deepBlack hover:text-white"
+          >
+            Teacher
+          </option>
+          <option
+            value="student"
+            className="hover:bg-deepBlack hover:text-white"
+          >
+            Student
+          </option>
+          <option
+            value="security"
+            className="hover:bg-deepBlack hover:text-white"
+          >
+            Security
+          </option>
+        </select>
+
+        <button
+          type="submit"
+          className="w-full bg-akiliRed text-white py-2 rounded-lg shadow hover:opacity-90 transition"
+        >
+          Create User
+        </button>
+      </form>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
