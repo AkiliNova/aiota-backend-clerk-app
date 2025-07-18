@@ -3,9 +3,9 @@ import prisma from "@/lib/prisma";
 const EventList = async ({ dateParam }: { dateParam: string | undefined }) => {
   const date = dateParam ? new Date(dateParam) : new Date();
 
-  const data = await prisma.event.findMany({
+  const data = await prisma.aiEvent.findMany({
     where: {
-      startTime: {
+      createdAt: {
         gte: new Date(date.setHours(0, 0, 0, 0)),
         lte: new Date(date.setHours(23, 59, 59, 999)),
       },
@@ -18,9 +18,9 @@ const EventList = async ({ dateParam }: { dateParam: string | undefined }) => {
       key={event.id}
     >
       <div className="flex items-center justify-between">
-        <h1 className="font-semibold text-gray-600">{event.title}</h1>
+        <h1 className="font-semibold text-gray-600">{event.confidence}</h1>
         <span className="text-gray-300 text-xs">
-          {event.startTime.toLocaleTimeString("en-UK", {
+          {event.createdAt.toLocaleTimeString("en-UK", {
             hour: "2-digit",
             minute: "2-digit",
             hour12: false,

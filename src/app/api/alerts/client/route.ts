@@ -5,7 +5,7 @@ import { getAuth } from "@clerk/nextjs/server";
 const prisma = new PrismaClient();
 
 export async function GET() {
-  const events = await prisma.surveillanceEvent.findMany({
+  const events = await prisma.aiEvent.findMany({
     orderBy: { timestamp: "desc" },
     take: 5,
     include: {
@@ -13,7 +13,7 @@ export async function GET() {
     },
   });
 
-  const totalCount = await prisma.surveillanceEvent.count();
+  const totalCount = await prisma.aiEvent.count();
 
   return Response.json({
     success: true,
@@ -37,13 +37,18 @@ export async function POST(req: NextRequest) {
       severity
     } = body;
 
-    const savedEvent = await prisma.surveillanceEvent.create({
+    const savedEvent = await prisma.aiEvent.create({
       data: {
         cameraId: parseInt(camera_id), // must be valid Camera.id
         eventType: event,              // must be valid enum EventType
         timestamp: new Date(timestamp),
         description: description || '',
-        severity: severity || 1
+        severity: severity || 1,
+        tenantId: body.tenantId || 'default-tenant', // provide a valid tenantId
+        label: body.label || '',                     // provide a label or empty string
+        confidence: body.confidence || 0,            // provide a confidence value
+        detectedAt: body.detectedAt ? new Date(body.detectedAt) : new Date(), // provide detectedAt or now
+        mediaUrl: body.mediaUrl || ''                // provide mediaUrl or empty string
       }
     });
 

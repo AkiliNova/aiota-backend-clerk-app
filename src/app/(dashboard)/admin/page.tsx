@@ -1,4 +1,3 @@
-import Announcements from "@/components/Announcements";
 import SurveillanceFeedSummary from "@/components/SurveillanceFeedSummary";
 import DetectionStatsChart from "@/components/DetectionStatsChart";
 import BehaviorAlertChart from "@/components/BehaviorAlertChart";
@@ -18,9 +17,9 @@ const AdminPage = ({
       <div className="w-full lg:w-2/3 flex flex-col gap-8">
         {/* USER CARDS */}
         <div className="flex gap-4 justify-between flex-wrap">
-          <UserCard type="admin" />
-          <UserCard type="teacher" />
-          <UserCard type="student" />
+          <UserCard type="users" />
+          <UserCard type="tenants" />
+          <UserCard type="cameras" />
           <UserCard type="security" />
         </div>
 
@@ -51,7 +50,6 @@ const AdminPage = ({
       <div className="w-full lg:w-1/3 flex flex-col gap-8">
         <SurveillanceFeedSummary />
         <EventCalendarContainer searchParams={searchParams} />
-        <Announcements />
       </div>
     </div>
   );

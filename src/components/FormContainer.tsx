@@ -11,12 +11,24 @@ export type FormContainerProps = {
     | "class"
     | "lesson"
     | "exam"
-    |  "user"
+    | "user"
     | "assignment"
     | "result"
     | "attendance"
     | "event"
-    | "announcement";
+    | "announcement"
+    | "tenant"
+    | "cameraZone"
+    | "camera"
+    | "surveillanceEvent"
+    | "flaggedEvent"
+    | "security"
+    | "aiModel"
+    | "device"
+    | "dvr"
+    | "nvr"
+    | "accessControlDevice"
+    | "visitorLog";
   type: "create" | "update" | "delete";
   data?: any;
   id?: number | string;
@@ -24,7 +36,7 @@ export type FormContainerProps = {
 };
 
 const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
-  let relatedData = {};
+  let relatedData: Record<string, any> = {};
 
   const { userId, sessionClaims } = auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role;
@@ -32,60 +44,88 @@ const FormContainer = async ({ table, type, data, id }: FormContainerProps) => {
 
   if (type !== "delete") {
     switch (table) {
-      case "subject":
-        const subjectTeachers = await prisma.teacher.findMany({
-          select: { id: true, name: true, surname: true },
+      case "user": {
+        const users = await prisma.user.findMany({
+          select: { id: true, email: true, name: true, role: true },
         });
-        relatedData = { teachers: subjectTeachers };
+        relatedData = { users };
         break;
-      case "class":
-        const classGrades = await prisma.grade.findMany({
-          select: { id: true, level: true },
-        });
-        const classTeachers = await prisma.teacher.findMany({
-          select: { id: true, name: true, surname: true },
-        });
-        relatedData = { teachers: classTeachers, grades: classGrades };
-        break;
-      case "teacher":
-        const teacherSubjects = await prisma.subject.findMany({
+      }
+
+      case "camera": {
+        const zones = await prisma.zone.findMany({
           select: { id: true, name: true },
         });
-        relatedData = { subjects: teacherSubjects };
+        relatedData = { zones };
         break;
-      case "student":
-        const studentGrades = await prisma.grade.findMany({
-          select: { id: true, level: true },
+      }
+      case "surveillanceEvent": {
+        const cameras = await prisma.camera.findMany({
+          select: { id: true, ipAddress: true },
         });
-        const studentClasses = await prisma.class.findMany({
-          include: { _count: { select: { students: true } } },
+        relatedData = { cameras };
+        break;
+      }
+      case "flaggedEvent": {
+        const events = await prisma.aiEvent.findMany({
+          select: { id: true, timestamp: true, eventType: true },
         });
-        relatedData = { classes: studentClasses, grades: studentGrades };
+        relatedData = { events };
         break;
-        case "user":
-          const users = await prisma.user.findMany({
-            select: { id: true, email: true, name: true, role: true },
-          });
-          relatedData = { users };
-        break;
-      case "exam":
-        const examLessons = await prisma.lesson.findMany({
-          where: {
-            ...(role === "teacher" ? { teacherId: currentUserId! } : {}),
-          },
+      }
+      case "aiModel": {
+        const tenants = await prisma.tenant.findMany({
           select: { id: true, name: true },
         });
-        relatedData = { lessons: examLessons };
+        relatedData = { tenants };
         break;
+      }
+      case "accessControlDevice": {
+        const tenants = await prisma.tenant.findMany({
+          select: { id: true, name: true },
+        });
+        relatedData = { tenants };
+        break;
+      }
+      case "security": {
+        const tenants = await prisma.tenant.findMany({
+          select: { id: true, name: true },
+        });
+        relatedData = { tenants };
+        break;
+      }
+      case "device": {
+        const tenants = await prisma.tenant.findMany({
+          select: { id: true, name: true },
+        });
+        relatedData = { tenants };
+        break;
+      }
+      case "nvr":
+      case "dvr": {
+        const tenants = await prisma.tenant.findMany({
+          select: { id: true, name: true },
+        });
+        relatedData = { tenants };
+        break;
+      }
+      case "visitorLog": {
+        const tenants = await prisma.tenant.findMany({
+          select: { id: true, name: true },
+        });
+        relatedData = { tenants };
+        break;
+      }
+
+      // Add more cases if needed — e.g. parent, announcement, etc.
 
       default:
         break;
     }
   }
-  
 
   return (
-    <div className="">
+    <div>
       <FormModal
         table={table}
         type={type}

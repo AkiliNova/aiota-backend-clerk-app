@@ -4,11 +4,11 @@ import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { SurveillanceEvent, Camera } from "@prisma/client";
+import { AiEvent, Camera } from "@prisma/client";
 import Image from "next/image";
 import { auth } from "@clerk/nextjs/server";
 
-type SurveillanceEventList = SurveillanceEvent & {
+type SurveillanceEventList = AiEvent & {
   camera: {
     name: string;
     location: string;
@@ -50,12 +50,12 @@ const SurveillanceEventsPage = async ({
       <td className="p-4">{item.eventType}</td>
       <td>{item.camera.name}</td>
       <td className="hidden md:table-cell">{item.camera.location}</td>
-      <td className="hidden md:table-cell">
+      {/* <td className="hidden md:table-cell">
         {new Intl.DateTimeFormat("en-US", {
           dateStyle: "short",
           timeStyle: "short",
         }).format(new Date(item.timestamp))}
-      </td>
+      </td> */}
       <td>
         <div className="flex items-center gap-2">
           {(role === "admin" || role === "security") && (
@@ -99,7 +99,7 @@ const SurveillanceEventsPage = async ({
   }
 
  const [data, count] = await prisma.$transaction([
-  prisma.surveillanceEvent.findMany({
+  prisma.aiEvent.findMany({
     where: query,
     include: {
       camera: {
@@ -109,17 +109,15 @@ const SurveillanceEventsPage = async ({
           zone: {
             select: {
               name: true,
-              location: true,
             },
           },
         },
       },
     },
-    orderBy: { timestamp: "desc" },
     take: ITEM_PER_PAGE,
     skip: ITEM_PER_PAGE * (p - 1),
   }),
-  prisma.surveillanceEvent.count({ where: query }),
+  prisma.aiEvent.count({ where: query }),
 ]);
 
   return (

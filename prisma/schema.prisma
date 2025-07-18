@@ -1,3 +1,5 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,319 +9,334 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin & User (Auth) Models
+// ─────────────────────────────────────────────────────────────────────────────
 model Admin {
   id       String @id @default(uuid())
   username String @unique
 }
 
-model Student {
-  id          String       @id @default(uuid())
-  username    String       @unique
-  name        String
-  surname     String
-  email       String?      @unique
-  phone       String?      @unique
-  address     String
-  img         String?
-  bloodType   String
-  sex         UserSex
-  birthday    DateTime
-  createdAt   DateTime     @default(now())
-
-  parentId    String
-  parent      Parent       @relation(fields: [parentId], references: [id])
-
-  classId     Int
-  class       Class        @relation(fields: [classId], references: [id])
-
-  gradeId     Int
-  grade       Grade        @relation(fields: [gradeId], references: [id])
-
-  attendances Attendance[]
-  results     Result[]
-}
-
-model Teacher {
-  id        String    @id @default(uuid())
-  username  String    @unique
-  name      String
-  surname   String
-  email     String?   @unique
-  phone     String?   @unique
-  address   String
-  img       String?
-  bloodType String
-  sex       UserSex
-  birthday  DateTime
-  createdAt DateTime  @default(now())
-
-  subjects  Subject[]
-  lessons   Lesson[]
-  classes   Class[] @relation("ClassSupervisor")
-}
-
-model Parent {
-  id        String    @id @default(uuid())
-  username  String    @unique
-  name      String
-  surname   String
-  email     String?   @unique
-  phone     String    @unique
-  address   String
-  createdAt DateTime  @default(now())
-
-  students  Student[]
-}
-
-model Grade {
-  id       Int       @id @default(autoincrement())
-  level    Int       @unique
-
-  students Student[]
-  classess Class[]
-}
-
-model Class {
-  id          Int       @id @default(autoincrement())
-  name        String    @unique
-  capacity    Int
-
-  supervisorId  String?
-  supervisor    Teacher? @relation("ClassSupervisor", fields: [supervisorId], references: [id])
-
-  gradeId     Int
-  grade       Grade     @relation(fields: [gradeId], references: [id])
-
-  lessons     Lesson[]
-  students    Student[]
-  events      Event[]
-  announcements Announcement[]
-}
-
-model Subject {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
-  teachers Teacher[]
-  lessons  Lesson[]
-}
-
-model Lesson {
-  id        Int       @id @default(autoincrement())
-  name      String
-  day       Day
-  startTime DateTime
-  endTime   DateTime
-
-  subjectId Int
-  subject   Subject    @relation(fields: [subjectId], references: [id])
-
-  classId   Int
-  class     Class      @relation(fields: [classId], references: [id])
-
-  teacherId String
-  teacher   Teacher    @relation(fields: [teacherId], references: [id])
-
-  exams       Exam[]
-  assignments Assignment[]
-  attendances Attendance[]
-}
-
-model Exam {
-  id        Int      @id @default(autoincrement())
-  title     String
-  startTime DateTime
-  endTime   DateTime
-
-  lessonId Int
-  lesson   Lesson   @relation(fields: [lessonId], references: [id])
-  results  Result[]
-}
-
-model Assignment {
-  id        Int      @id @default(autoincrement())
-  title     String
-  startDate DateTime
-  dueDate   DateTime
-
-  lessonId Int
-  lesson   Lesson   @relation(fields: [lessonId], references: [id])
-  results  Result[]
-}
-
-model Result {
-  id          Int       @id @default(autoincrement())
-  score       Int
-
-  examId       Int?
-  exam         Exam?       @relation(fields: [examId], references: [id])
-
-  assignmentId Int?
-  assignment   Assignment? @relation(fields: [assignmentId], references: [id])
-
-  studentId    String
-  student      Student     @relation(fields: [studentId], references: [id])
-}
-
-model Attendance {
-  id        Int      @id @default(autoincrement())
-  date      DateTime
-  present   Boolean
-
-  studentId String
-  student   Student @relation(fields: [studentId], references: [id])
-
-  lessonId  Int
-  lesson    Lesson  @relation(fields: [lessonId], references: [id])
-}
-
-model Event {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  startTime   DateTime
-  endTime     DateTime
-
-  classId Int?
-  class   Class? @relation(fields: [classId], references: [id])
-}
-
-model Announcement {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  date        DateTime
-
-  classId Int?
-  class   Class? @relation(fields: [classId], references: [id])
-}
-enum EventType {
-  FIGHT
-  BULLYING
-  SNEAKING
-  TRUANCY
-  STEALING
-  EXAM_CHEATING
-  LOITERING
-
-  FIREARM
-  SHARP_OBJECT
-  PHONE
-  DRUGS
-  CIGARETTES
-
-  SMOKING
-  DRINKING
-  VANDALISM
-
-  FIRE
-  SMOKE
-  FALL_DETECTED
-  CROWDING
-  INTRUSION
-  UNIDENTIFIED_PERSON
-
-  FACE_RECOGNIZED
-  FACE_NOT_RECOGNIZED
-  CAMERA_OFFLINE
-  CAMERA_ONLINE
-}
-
-
-model CameraZone {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  location    String?
-  cameras     Camera[]
-}
-
-model Camera {
-  id         Int          @id @default(autoincrement())
-  zoneId     Int
-  ipAddress  String
-  isActive   Boolean       @default(true)
-
-  zone       CameraZone    @relation(fields: [zoneId], references: [id])
-  events     SurveillanceEvent[]
-}
-
-model SurveillanceEvent {
-  id          Int             @id @default(autoincrement())
-  cameraId    Int
-  eventType   EventType
-  timestamp   DateTime        @default(now())
-  description String?
-  severity    Int             @default(1) // 1–5 severity scale
-  camera      Camera          @relation(fields: [cameraId], references: [id])
-  flagged     FlaggedEvent?
-}
-
-model FlaggedEvent {
-  id              Int                @id @default(autoincrement())
-  eventId         Int                @unique
-  flaggedById     String             // Clerk user ID
-  reason          String
-  reviewed        Boolean            @default(false)
-  reviewedAt      DateTime?
-  additionalNotes String?
-
-  event           SurveillanceEvent  @relation(fields: [eventId], references: [id])
-}
-model Security {
-  id          String   @id @default(uuid())
-  name        String
-  phone       String   @unique
-  email       String?  @unique
-  station     String   // e.g. "Main Gate", "Dorm A"
-  shift       String   // e.g. "Night", "Day"
-  image       String?  // optional profile image
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
 model User {
-  id             String   @id @default(uuid())
-  email          String   @unique
-  password       String?  // null if you delegate auth to Clerk later
-  name           String?
-  username       String?  @unique
-  phone          String?  @unique
-  profileImage   String?  // Clerk stores image
-  clerkUserId    String?  @unique // maps to Clerk's `user.id`
-
-  // Clerk metadata
-  clerkCreatedAt DateTime? 
-  clerkUpdatedAt DateTime?
-  lastSignInAt   DateTime?
-  isEmailVerified Boolean? @default(false)
-  emailVerificationToken String? // if you do your own flow
-  phoneVerified   Boolean? @default(false)
-
-  // Roles & permissions (optional)
+  id              String    @id @default(uuid())
+  email           String    @unique
+  password        String? // null if using Clerk
+  name            String?
+  username        String?   @unique
+  phone           String?   @unique
+  profileImage    String? // Clerk stores image
+  clerkUserId     String?   @unique
+  clerkCreatedAt  DateTime?
+  clerkUpdatedAt  DateTime?
+  lastSignInAt    DateTime?
+  isEmailVerified Boolean?  @default(false)
+  phoneVerified   Boolean?  @default(false)
   role            UserRole  @default(USER)
-
-  // Timestamps
+  tenantId        String? // Optional for super admins
+  tenant          Tenant?   @relation(fields: [tenantId], references: [id])
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  @@index([tenantId])
 }
 
-// Optional enum for roles
 enum UserRole {
   ADMIN
   STAFF
   USER
 }
 
-
 enum UserSex {
   MALE
   FEMALE
 }
 
-enum Day {
-  MONDAY
-  TUESDAY
-  WEDNESDAY
-  THURSDAY
-  FRIDAY
+// ─────────────────────────────────────────────────────────────────────────────
+// Tenant (School) for multi-tenancy
+// ─────────────────────────────────────────────────────────────────────────────
+model Tenant {
+  id         String      @id @default(uuid())
+  name       String
+  code       String      @unique
+  contact    String
+  address    String
+  email      String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  users      User[]
+  zones      Zone[] // Physical or logical areas
+  cameras    Camera[] // Surveillance cameras
+  dvrs       Dvr[] // DVR/NVR devices
+  sensors    Sensor[] // IoT sensors
+  aiEvents   AiEvent[] // AI detection events
+  gateEvents GateEvent[] // Entry/exit logs
+  visitors   Visitor[] // Visitor records
+  security   Security[] // Security staff
+  aiModels   AiModel[]   @relation("TenantToAiModel") // Deployed AI model versions
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Zones (e.g., buildings, floors, gates)
+// ─────────────────────────────────────────────────────────────────────────────
+model Zone {
+  id          Int     @id @default(autoincrement())
+  tenantId    String
+  name        String
+  description String?
+  parentId    Int?
+
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  parent   Zone?  @relation("ZoneParent", fields: [parentId], references: [id])
+  children Zone[] @relation("ZoneParent")
+
+  cameras    Camera[]
+  dvrs       Dvr[]
+  sensors    Sensor[]
+  gateEvents GateEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Cameras
+// ─────────────────────────────────────────────────────────────────────────────
+model Camera {
+  id       Int    @id @default(autoincrement())
+  tenantId String
+  zoneId   Int
+  dvrId    Int? // Optional link to DVR/NVR
+
+  name       String
+  ipAddress  String
+  macAddress String
+  model      String
+  firmware   String
+  location   String
+  isActive   Boolean @default(true)
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  zone     Zone      @relation(fields: [zoneId], references: [id])
+  dvr      Dvr?      @relation(fields: [dvrId], references: [id])
+  aiEvents AiEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String? // Clerk userId
+  updatedBy String?
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DVR / NVR Devices
+// ─────────────────────────────────────────────────────────────────────────────
+model Dvr {
+  id       Int    @id @default(autoincrement())
+  tenantId String
+  zoneId   Int
+
+  name              String
+  ipAddress         String
+  macAddress        String
+  model             String
+  firmware          String
+  storageCapacityGb Int
+  isActive          Boolean @default(true)
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id])
+  zone    Zone     @relation(fields: [zoneId], references: [id])
+  cameras Camera[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// IoT Sensors
+// ─────────────────────────────────────────────────────────────────────────────
+model Sensor {
+  id         Int        @id @default(autoincrement())
+  tenantId   String
+  zoneId     Int
+  name       String
+  type       SensorType
+  ipAddress  String
+  macAddress String
+  status     String // e.g. online, offline, triggered
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  zone   Zone   @relation(fields: [zoneId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+}
+
+enum SensorType {
+  FIRE
+  SMOKE
+  PANIC_BUTTON
+  MOTION
+  DOOR_CONTACT
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI Detection Events
+// ─────────────────────────────────────────────────────────────────────────────
+model AiEvent {
+  id          Int           @id @default(autoincrement())
+  tenantId    String
+  cameraId    Int
+  eventType   EventType
+  label       String // e.g. recognized name or object
+  confidence  Float
+  detectedAt  DateTime
+  mediaUrl    String // link to snapshot/video clip
+  extraData   Json?
+  timestamp   DateTime      @default(now())
+  description String
+  severity    Int           @default(1)
+  flagged     FlaggedEvent?
+  tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  camera      Camera        @relation(fields: [cameraId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdBy   String?
+  updatedBy   String?
+}
+
+enum EventType {
+  FACE_RECOGNIZED
+  FACE_NOT_RECOGNIZED
+  FIREARM
+  SHARP_OBJECT
+  PHONE
+  DRUGS
+  FIGHT
+  LOITERING
+  BULLYING
+  SNEAKING
+  TRUANCY
+  STEALING
+  EXAM_CHEATING
+  VANDALISM
+  SMOKING
+  CROWDING
+  UNIDENTIFIED_PERSON
+  CAMERA_OFFLINE
+  CAMERA_ONLINE
+  SMOKE
+  FIRE
+  INTRUSION
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Flagged / Escalated Events
+// ─────────────────────────────────────────────────────────────────────────────
+model FlaggedEvent {
+  id          Int       @id @default(autoincrement())
+  eventId     Int       @unique
+  flaggedById String // Clerk userId
+  reason      String
+  reviewed    Boolean   @default(false)
+  reviewedAt  DateTime?
+  notes       String?
+
+  event AiEvent @relation(fields: [eventId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Gate Entry/Exit Logs
+// ─────────────────────────────────────────────────────────────────────────────
+model GateEvent {
+  id         Int      @id @default(autoincrement())
+  tenantId   String
+  zoneId     Int
+  entityType String // e.g. STUDENT, STAFF, VISITOR, UNKNOWN
+  entityId   String? // UUID or string ID
+  eventType  String // ENTRY or EXIT
+  detectedAt DateTime
+  mediaUrl   String?
+  extraData  Json?
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  zone   Zone   @relation(fields: [zoneId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Visitor Records
+// ─────────────────────────────────────────────────────────────────────────────
+model Visitor {
+  id       Int    @id @default(autoincrement())
+  tenantId String
+
+  fullName    String
+  idNumber    String
+  contact     String
+  visitReason String
+  entryTime   DateTime
+  exitTime    DateTime?
+  photoUrl    String
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Security Staff (Guards)
+// ─────────────────────────────────────────────────────────────────────────────
+model Security {
+  id       String @id @default(uuid())
+  tenantId String
+
+  name     String
+  phone    String  @unique
+  email    String?
+  station  String // e.g. "Main Gate"
+  shift    String // e.g. "Day", "Night"
+  image    String?
+  isActive Boolean @default(true)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AI Model Versioning
+// ─────────────────────────────────────────────────────────────────────────────
+model AiModel {
+  id         Int      @id @default(autoincrement())
+  tenantId   String
+  modelName  String
+  version    String
+  type       String // e.g. FACE, OBJECT, HUMAN_ACTION
+  path       String // storage path or URL
+  accuracy   Float
+  deployedAt DateTime
+  notes      String?
+
+  tenant Tenant @relation("TenantToAiModel", fields: [tenantId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?
+  updatedBy String?
 }

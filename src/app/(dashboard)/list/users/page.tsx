@@ -2,17 +2,13 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-
-type User = {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  createdAt: string;
-};
+import { User } from "@prisma/client";
+import { useUser } from "@clerk/nextjs";
 
 export default function UserPage() {
+  const { user: currentUser } = useUser();
   const [users, setUsers] = useState<User[]>([]);
+  const [tenants, setTenants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
@@ -21,7 +17,17 @@ export default function UserPage() {
     email: "",
     password: "",
     role: "teacher",
+    tenantId: "",
   });
+
+  const fetchTenants = async () => {
+    try {
+      const res = await axios.get<any[]>("/api/tenant");
+      setTenants(res.data);
+    } catch (error) {
+      console.error('Failed to fetch tenants:', error);
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -36,7 +42,13 @@ export default function UserPage() {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+    // Only fetch tenants if super admin
+    if (currentUser?.publicMetadata?.role === "admin" && !currentUser?.publicMetadata?.tenantId) {
+      fetchTenants();
+    } else if (currentUser?.publicMetadata?.tenantId) {
+      setFormData(prev => ({ ...prev, tenantId: currentUser.publicMetadata.tenantId as string }));
+    }
+  }, [currentUser]);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,17 +57,23 @@ export default function UserPage() {
     const firstName = nameParts[0];
     const lastName = nameParts.slice(1).join(" ") || "";
 
-    await axios.post("/api/admin/users", {
-      email: formData.email,
-      password: formData.password,
-      role: formData.role,
-      firstName,
-      lastName,
-    });
+    try {
+      await axios.post("/api/admin/users", {
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        firstName,
+        lastName,
+        tenantId: formData.tenantId,
+      });
 
-    setFormData({ name: "", email: "", password: "", role: "teacher" });
-    setShowModal(false);
-    fetchUsers();
+      setFormData({ name: "", email: "", password: "", role: "teacher", tenantId: "" });
+      setShowModal(false);
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Failed to create user:', error.response?.data?.error || error.message);
+      // You might want to show an error message to the user here
+    }
   };
 
   return (
@@ -88,7 +106,7 @@ export default function UserPage() {
         <div className="bg-white rounded shadow p-4">
           <p className="text-sm text-gray-500 mb-1">Admins</p>
           <p className="text-xl font-bold">
-            {users.filter((u) => u.role === "admin").length}
+            {users.filter((u) => u.role === "ADMIN").length}
           </p>
         </div>
       </div>
@@ -190,12 +208,14 @@ export default function UserPage() {
           className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-akiliRed
             text-deepBlack"
         >
-          <option
-            value="admin"
-            className="hover:bg-deepBlack hover:text-white"
-          >
-            Admin
-          </option>
+          {currentUser?.publicMetadata?.role === "admin" && !currentUser?.publicMetadata?.tenantId && (
+            <option
+              value="admin"
+              className="hover:bg-deepBlack hover:text-white"
+            >
+              Admin
+            </option>
+          )}
           <option
             value="teacher"
             className="hover:bg-deepBlack hover:text-white"
@@ -215,6 +235,24 @@ export default function UserPage() {
             Security
           </option>
         </select>
+
+        {currentUser?.publicMetadata?.role === "admin" && !currentUser?.publicMetadata?.tenantId && (
+          <select
+            value={formData.tenantId}
+            onChange={(e) =>
+              setFormData({ ...formData, tenantId: e.target.value })
+            }
+            required
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-akiliRed text-deepBlack"
+          >
+            <option value="">Select Tenant</option>
+            {tenants.map((tenant) => (
+              <option key={tenant.id} value={tenant.id}>
+                {tenant.name}
+              </option>
+            ))}
+          </select>
+        )}
 
         <button
           type="submit"

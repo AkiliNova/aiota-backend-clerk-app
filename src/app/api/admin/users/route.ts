@@ -63,37 +63,51 @@ export async function POST(req: NextRequest) {
   const currentUser = await clerkClient.users.getUser(userId);
   const role = currentUser?.publicMetadata?.role;
   const roleMap: Record<string, UserRole> = {
-  admin: UserRole.ADMIN,
-  teacher: UserRole.STAFF,
-  security: UserRole.STAFF,
-  student: UserRole.USER,
-};
+    admin: UserRole.ADMIN,
+    teacher: UserRole.STAFF,
+    security: UserRole.STAFF,
+    student: UserRole.USER,
+  };
 
+  // Only super admins can create users without tenant, and only they can create admin users
+  const isSuperAdmin = role === "admin" && !currentUser?.publicMetadata?.tenantId;
 
-
-  if (role !== "admin") {
+  if (!isSuperAdmin && role !== "admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   try {
-   const { email, firstName, lastName, role: newUserRole, password } = await req.json();
+    const { email, firstName, lastName, role: newUserRole, password, tenantId } = await req.json();
     const prismaRole = roleMap[newUserRole];
-  // Optional: Basic validation
-  if (!email || !firstName || !lastName || !newUserRole || !password) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-  }
 
-  // Create user in Clerk
-  const newUser = await clerkClient.users.createUser({
-    emailAddress: [email],
-    password,
-    firstName,
-    lastName,
-    username: email.split('@')[0], // or generate a custom one
-    publicMetadata: {
-      role: newUserRole,
-    },
-  });
+    // Validation
+    if (!email || !firstName || !lastName || !newUserRole || !password) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // If not super admin, can only create users for their own tenant
+    const userTenantId = isSuperAdmin ? tenantId : currentUser?.publicMetadata?.tenantId;
+    
+    if (!isSuperAdmin && newUserRole === "admin") {
+      return NextResponse.json({ error: "Only super admins can create admin users" }, { status: 403 });
+    }
+
+    if (!isSuperAdmin && !userTenantId) {
+      return NextResponse.json({ error: "Tenant ID is required" }, { status: 400 });
+    }
+
+    // Create user in Clerk with tenant metadata
+    const newUser = await clerkClient.users.createUser({
+      emailAddress: [email],
+      password,
+      firstName,
+      lastName,
+      username: email.split('@')[0],
+      publicMetadata: {
+        role: newUserRole,
+        tenantId: userTenantId, // Store tenantId in Clerk metadata
+      },
+    });
 
     // Persist to local DB
     await prisma.user.create({
@@ -102,23 +116,23 @@ export async function POST(req: NextRequest) {
         email,
         name: `${firstName} ${lastName}`,
         role: prismaRole as UserRole,
-        password: bcrypt.hashSync(password, 10), // Store hashed password
+        tenantId: userTenantId,
+        password: bcrypt.hashSync(password, 10),
       },
     });
 
     return NextResponse.json({ success: true });
   } catch (err: any) {
-  console.error("User creation error:", err);
+    console.error("User creation error:", err);
 
-  if (err?.clerkError && Array.isArray(err.errors)) {
-    const messages = err.errors.map((e: any) => e.longMessage || e.message);
-    return NextResponse.json({ error: messages.join(" | ") }, { status: 400 });
+    if (err?.clerkError && Array.isArray(err.errors)) {
+      const messages = err.errors.map((e: any) => e.longMessage || e.message);
+      return NextResponse.json({ error: messages.join(" | ") }, { status: 400 });
+    }
+
+    return NextResponse.json(
+      { error: err.message || "Something went wrong" },
+      { status: 500 }
+    );
   }
-
-  return NextResponse.json(
-    { error: err.message || "Something went wrong" },
-    { status: 500 }
-  );
-}
-
 }
