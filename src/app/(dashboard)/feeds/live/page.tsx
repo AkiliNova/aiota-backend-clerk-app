@@ -13,28 +13,28 @@ const cameras = [
     id: 'camera1',
     section: 'Basement',
     name: 'Gym Camera',
-    rtspUrl: 'rtsp://admin:akilicamera@197.237.111.79:554/mode=real&idc=1&ids=2',
+    rtspUrl: 'rtsp://admin:akilicamera@197.237.111.26:554/mode=real&idc=1&ids=2',
     status: 'active'
   },
   {
     id: 'camera2',
     section: 'Basement',
     name: 'Workout Area',
-    rtspUrl: 'rtsp://admin:akilicamera@197.237.111.79:554/mode=real&idc=2&ids=2',
+    rtspUrl: 'rtsp://admin:akilicamera@197.237.111.26:554/mode=real&idc=2&ids=2',
     status: 'active'
   },
   {
     id: 'camera3',
     section: 'Backyard',
     name: 'Garden Entrance',
-    rtspUrl: 'rtsp://admin:akilicamera@197.237.111.79:554/mode=real&idc=3&ids=2',
+    rtspUrl: 'rtsp://admin:akilicamera@197.237.111.26:554/mode=real&idc=3&ids=2',
     status: 'active'
   },
   {
     id: 'camera4',
     section: 'Backyard',
     name: 'Pool View',
-    rtspUrl: 'rtsp://admin:akilicamera@197.237.111.79:554/mode=real&idc=4&ids=2',
+    rtspUrl: 'rtsp://admin:akilicamera@197.237.111.26:554/mode=real&idc=4&ids=2',
     status: 'active'
   }
 ];

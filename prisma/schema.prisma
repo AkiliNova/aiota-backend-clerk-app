@@ -55,25 +55,31 @@ enum UserSex {
 // Tenant (School) for multi-tenancy
 // ─────────────────────────────────────────────────────────────────────────────
 model Tenant {
-  id         String      @id @default(uuid())
-  name       String
-  code       String      @unique
-  contact    String
-  address    String
-  email      String
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  users      User[]
-  zones      Zone[] // Physical or logical areas
-  cameras    Camera[] // Surveillance cameras
-  dvrs       Dvr[] // DVR/NVR devices
-  sensors    Sensor[] // IoT sensors
-  aiEvents   AiEvent[] // AI detection events
-  gateEvents GateEvent[] // Entry/exit logs
-  visitors   Visitor[] // Visitor records
-  security   Security[] // Security staff
-  aiModels   AiModel[]   @relation("TenantToAiModel") // Deployed AI model versions
+  id           String   @id @default(uuid())
+  name         String
+  code         String   @unique
+  contact      String
+  address      String
+  email        String
+  description  String?      // NEW
+  subscription String?      // NEW (or consider enum)
+  status       String?      // NEW (or consider enum)
+  domain       String?      // NEW
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users        User[]
+  zones        Zone[]
+  cameras      Camera[]
+  dvrs         Dvr[]
+  sensors      Sensor[]
+  aiEvents     AiEvent[]
+  gateEvents   GateEvent[]
+  visitors     Visitor[]
+  security     Security[]
+  aiModels     AiModel[] @relation("TenantToAiModel")
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Zones (e.g., buildings, floors, gates)

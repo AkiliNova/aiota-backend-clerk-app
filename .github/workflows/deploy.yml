@@ -8,7 +8,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -19,7 +18,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm ci # faster and consistent than `npm install`
+        run: npm install
 
       - name: Build Next.js app
         run: npm run build
@@ -34,8 +33,7 @@ jobs:
           script: |
             cd ~/aiota/aiota-backend-clerk-app
             git pull origin main
-            npm ci
-            npx prisma generate
+            npm install
             npx prisma db push --accept-data-loss
             npm run build
-            pm2 reload nextjs-app || pm2 start npm --name "nextjs-app" -- run start
+            pm2 restart nextjs-app
